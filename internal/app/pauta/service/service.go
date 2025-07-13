@@ -1,13 +1,12 @@
 package service
 
 import (
-
 	"fmt"
 	"log"
 
+	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/dto"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/entity"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/repository"
-
 )
 
 type PautaService struct {
@@ -22,7 +21,7 @@ func NewPautaService(r *repository.Repository) *PautaService {
 
 }
 
-func validadePauta(pauta *entity.Pauta) error {
+func validadePauta(pauta entity.Pauta) error {
 
 	if pauta.Nome == "" {
 		return fmt.Errorf("O campo Nome está vazio")
@@ -36,46 +35,53 @@ func validadePauta(pauta *entity.Pauta) error {
 
 }
 
-func (r *PautaService) Create(pauta *entity.Pauta) (*entity.Pauta, error) {
+func transformaEmEntity(dto dto.PautaRequest) entity.Pauta {
 
-	if pauta == nil {
-		return nil, fmt.Errorf("O objeto está vazio")
-	}
+	var pauta entity.Pauta
+	pauta.Nome = dto.Nome
+	pauta.Descricao = dto.Descricao
+	return pauta
+
+}
+
+func (r *PautaService) Create(dto dto.PautaRequest) (entity.Pauta, error) {
+
+	pauta := transformaEmEntity(dto)
 
 	err := validadePauta(pauta) 
 	if err != nil {
-		return nil, err
+		return entity.Pauta{}, err
 	}
 
 	id, err := r.repo.Create(pauta)
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return entity.Pauta{}, err
 	}
 
-	var pautaCreated *entity.Pauta
-	pautaCreated, err = r.repo.Get(id)
+	pautaCreated, err := r.repo.Get(id)
 
 	return pautaCreated, nil
 
 }
 
-func (r *PautaService) List(id *int) (*entity.Pauta, error) {
+func (r *PautaService) List(id int) (entity.Pauta, error) {
 
-	if id == nil {
-		return nil, fmt.Errorf("ID é null")
-	}
+	// if id ==  {
+	// 	return entity.Pauta{}, fmt.Errorf("ID é null")
+	// }
 
-	var pauta *entity.Pauta
+	var pauta entity.Pauta
 	pauta, err := r.repo.Get(id)
 	if err != nil {
-		return nil, err
+		return entity.Pauta{}, err
 	}
 
 	return pauta, nil
 
 }
 
-func (r *PautaService) ListAll() (*[]entity.Pauta, error) {
+func (r *PautaService) ListAll() ([]entity.Pauta, error) {
 
 	listaPautas, err := r.repo.GetAll()
 	if err != nil {
@@ -95,13 +101,9 @@ func (r *PautaService) Update(id int, pauta entity.Pauta) error {
 
 }
 
-func (r *PautaService) Delete(id *int) error {
+func (r *PautaService) Delete(id int) error {
 
-	if id == nil {
-		return fmt.Errorf("ID is null")
-	}
-
-	err := r.repo.Delete(*id)
+	err := r.repo.Delete(id)
 	if err != nil {
 		log.Println(err)
 		return err

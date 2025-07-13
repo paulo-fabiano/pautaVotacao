@@ -3,8 +3,11 @@ package controller
 import (
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/dto"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/entity"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/service"
 	"github.com/paulo-fabiano/pautaVotacao/internal/utils/handler"
@@ -21,72 +24,54 @@ func NewPautaController(service *service.PautaService) *Controller {
 }
 
 func (c *Controller) CreatePauta(ctx *gin.Context) {
-
-	ctx.Header("Content-type", "application/json")
-	ctx.JSON(http.StatusOK, gin.H{
-		"message":   "msg",
-		"errorCode": "code",
-	})	
 	
-	pauta := entity.Pauta{ID: 2, Nome: "Teste", Descricao: "Teste"}
-	c.Controller.Create(&pauta)
-	// if request.Method != "POST" {
-	// 	handler.SendError(writer, http.StatusBadRequest, "método não permitido")
-	// 	return
-	// }
+	var data dto.PautaRequest
+	err := ctx.ShouldBindJSON(&data)
+	if err != nil {
+		log.Println(err)
+		handler.SendError(ctx, http.StatusInternalServerError, "Erro interno do servidor")
+		return
+	}
 
-	// repository := repository.NewPautaRepository()
-	// service := service.NewPautaService(repository)
+	pautaCreated, err := c.Controller.Create(data)
+	if err != nil {
+		log.Println(err)
+		handler.SendError(ctx, http.StatusInternalServerError, "Erro interno do servidor")
+		return
+	}
 
-	// var pauta entity.Pauta
-	// pautaDecoder := json.NewDecoder(request.Body)
-	// err := pautaDecoder.Decode(&pauta)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return
-	// }
+	type DataRes struct {
+		Data entity.Pauta `json:"data"`
+		Time time.Time	`json:"datetime"`
+	}
 
-	// // Implements return obj created
-	// _, err = service.Create(&pauta)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return
-	// }
-
-	// handler.SendSucess(writer, http.StatusOK, "created")
+	handler.SendSucess(ctx, http.StatusOK, DataRes{
+		Data: pautaCreated,
+		Time: time.Now(),
+	})
 
 }
 
-func ListPauta(ctx *gin.Context) {
+func (c *Controller) ListPauta(ctx *gin.Context) {
 
-	// if request.Method != "GET" {
-	// 	handler.SendError(writer, http.StatusBadRequest, "método não permitido")
-	// 	return
-	// }
+	idString := ctx.Query("id")
+	ID, err := strconv.Atoi(idString)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
+	}
 
-	// repository := repository.NewPautaRepository()
-	// service := service.NewPautaService(repository)
+	pauta, err := c.Controller.List(ID)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
+		return
+	}
 
-	// paramID := request.URL.Query().Get("id")
-	// id, err := strconv.Atoi(paramID)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return
-	// }
-
-	// var pauta *entity.Pauta
-	// pauta, err = service.List(&id)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return
-	// }
-
-	// handler.SendSucess(writer, http.StatusOK, pauta)
+	handler.SendSucess(ctx, http.StatusOK, pauta)
 	
 }
 
 
-func (c Controller) ListAllPautas(ctx *gin.Context) {
+func (c *Controller) ListAllPautas(ctx *gin.Context) {
 
 	listaPautas, err := c.Controller.ListAll()
 	if err != nil {
@@ -96,13 +81,13 @@ func (c Controller) ListAllPautas(ctx *gin.Context) {
 	}
 
 	type Data struct {
-		Data *[]entity.Pauta
+		Data []entity.Pauta `json:"data"`
 	}
 	handler.SendSucess(ctx, http.StatusOK, Data{Data: listaPautas})
 	
 }
 
-func UpdatePauta(ctx *gin.Context) {
+func (c *Controller) UpdatePauta(ctx *gin.Context) {
 
 	// if request.Method != "PUT" || request.Method != "PATCH" {
 	// 	handler.SendError(writer, http.StatusBadRequest, "método não permitido")
@@ -113,29 +98,27 @@ func UpdatePauta(ctx *gin.Context) {
 	
 }
 
-func DeletePauta(ctx *gin.Context) {
+func (c *Controller) DeletePauta(ctx *gin.Context) {
 
-	// if request.Method != "GET" {
-	// 	handler.SendError(writer, http.StatusBadRequest, "método não permitido")
-	// 	return
-	// }
-	
-	// repository := repository.NewPautaRepository()
-	// service := service.NewPautaService(repository)
+	idString := ctx.Param("id")
+	log.Println(idString)
+	if idString == "" {
+		handler.SendError(ctx, http.StatusBadGateway, "Erro ID é null")
+		return
+	}
 
-	// paramID := request.URL.Query().Get("id")
-	// id, err := strconv.Atoi(paramID)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return 
-	// }
+	ID, err := strconv.Atoi(idString)
+	if err != nil {
+		handler.SendError(ctx, http.StatusInternalServerError, "Erro interno do servidor")
+		return
+	}
 
-	// err = service.Delete(&id)
-	// if err != nil {
-	// 	handler.SendError(writer, http.StatusInternalServerError, "erro interno")
-	// 	return
-	// }
+	err = c.Controller.Delete(ID)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
+		return
+	}
 
-	// handler.SendSucess(writer, http.StatusNoContent, "deleted with sucess")
+	handler.SendSucess(ctx, http.StatusNoContent, "deleted with sucess")
 	
 }

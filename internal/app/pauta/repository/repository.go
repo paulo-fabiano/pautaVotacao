@@ -18,51 +18,51 @@ func NewPautaRepository() *Repository {
 	return &Repository{db: database.GetConnectionDatabase()}
 }
 
-func(r Repository) Create(pauta *entity.Pauta) (*int, error) {
+func(r Repository) Create(pauta entity.Pauta) (int, error) {
 
-	query := "INSERT INTO %s (nome, descricao) VALUES ($1, $2) RETURNING id;"
+	query := "INSERT INTO t_pauta_votacao (nome, descricao) VALUES ($1, $2) RETURNING id;"
 
 	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return 0, err
 	}
 	defer stmt.Close()
 
-	var id int
-	err = stmt.QueryRow(&pauta.Nome, &pauta.Descricao).Scan(&id)
+	var ID int
+	err = stmt.QueryRow(&pauta.Nome, &pauta.Descricao).Scan(&ID)
 	if err != nil {
 		log.Println(err)
-		return nil, fmt.Errorf("Erro ao salvar objeto no banco de dados")
+		return 0, fmt.Errorf("Erro ao salvar objeto no banco de dados")
 	}
 	
-	return &id, nil
+	return ID, nil
  
 }
 
-func(r Repository) Get(id *int) (*entity.Pauta, error) {
+func(r Repository) Get(id int) (entity.Pauta, error) {
 	
-	query := "SELECT * FROM t_pauta WHERE id = $1;"
+	query := "SELECT * FROM t_pauta_votacao WHERE id = $1;"
 
 	stmt, err := r.db.Prepare(query)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return entity.Pauta{}, err
 	}
 	defer stmt.Close()
 
 	var pauta entity.Pauta
 	err = stmt.QueryRow(id).Scan(&pauta.ID, &pauta.Nome, &pauta.Descricao)
 	if err != nil {
-		log.Println("Erro ao executar a busca no banco de dados")
-		return nil, err
+		log.Println("Erro ao executar a busca no banco de dados", err)
+		return pauta, err
 	}
 
-	return &pauta, nil
+	return pauta, nil
 
 }
 
-func(r Repository) GetAll() (*[]entity.Pauta, error) {
+func(r Repository) GetAll() ([]entity.Pauta, error) {
 	
 	query := "SELECT * FROM t_pauta_votacao;"
 	
@@ -93,7 +93,7 @@ func(r Repository) GetAll() (*[]entity.Pauta, error) {
 
 	}
 
-	return &listPautas, nil
+	return listPautas, nil
 
 }
 
@@ -101,15 +101,15 @@ func(r Repository) Update(id int, data interface{}) error {
 
 	queryExist := fmt.Sprintf("SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)")
 
-	stmt, err := r.db.Prepare(queryExist)
+	stmtExist, err := r.db.Prepare(queryExist)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	defer stmt.Close()
+	defer stmtExist.Close()
 
 	var existe bool
-	err = stmt.QueryRow(id).Scan(&existe)
+	err = stmtExist.QueryRow(id).Scan(&existe)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -119,8 +119,8 @@ func(r Repository) Update(id int, data interface{}) error {
 		return fmt.Errorf("ID não existe no banco de dados")
 	}
 
-	var pauta *entity.Pauta
-	pauta, err = r.Get(&id)
+	var pauta entity.Pauta
+	pauta, err = r.Get(id)
 	if err != nil {
 		log.Println(err)
 		return err
