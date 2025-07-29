@@ -101,9 +101,9 @@ func(r Repository) GetAll() ([]entity.Pauta, error) {
 }
 
 // Update é a função do Repository que atualiza uma Pauta
-func(r Repository) Update(id uint64, data interface{}) error {
+func(r Repository) Update(id uint64, pauta entity.Pauta) error {
 
-	queryExist := "SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)"
+	queryExist := "SELECT EXISTS(SELECT id FROM t_pauta_votacao WHERE id = $1);"
 
 	stmtExist, err := r.db.Prepare(queryExist)
 	if err != nil {
@@ -123,15 +123,22 @@ func(r Repository) Update(id uint64, data interface{}) error {
 		return fmt.Errorf("ID não existe no banco de dados")
 	}
 
-	var pauta entity.Pauta
-	pauta, err = r.Get(id)
+	pautaExistente, err := r.Get(id)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	queryUpdate := "UPDATE t_pauta SET nome = $1, descricao = $2 WHERE id = $3;"
-	_, err = r.db.Exec(queryUpdate, pauta.Nome, pauta.Descricao, id)
+	if pauta.Nome != "" {
+		pautaExistente.Nome = pauta.Nome
+	}
+
+	if pauta.Descricao != "" {
+		pautaExistente.Descricao = pauta.Descricao
+	}
+	
+	queryUpdate := "UPDATE t_pauta_votacao SET nome = $1, descricao = $2 WHERE id = $3;"
+	_, err = r.db.Exec(queryUpdate, pautaExistente.Nome, pautaExistente.Descricao, id)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -144,7 +151,7 @@ func(r Repository) Update(id uint64, data interface{}) error {
 // Delete é a função do Repository que apaga uma Pauta
 func(r Repository) Delete(id uint64) error {
 	
-	queryExist := "SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)"
+	queryExist := "SELECT EXISTS(SELECT id FROM t_pauta_votacao WHERE id = $1)"
 
 	stmt, err := r.db.Prepare(queryExist)
 	if err != nil {
@@ -164,7 +171,7 @@ func(r Repository) Delete(id uint64) error {
 		return fmt.Errorf("ID não existe no banco de dados")
 	}
 
-	queryDelete := "DELETE FROM t_pautas WHERE id = $1;"
+	queryDelete := "DELETE FROM t_pauta_votacao WHERE id = $1;"
 
 	stmt, err = r.db.Prepare(queryDelete)
 	if err != nil {

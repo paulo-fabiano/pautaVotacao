@@ -95,7 +95,10 @@ func (r *PautaService) ListAll() ([]entity.Pauta, error) {
 // Update é a função do Service para atualizar uma Pauta
 func (r *PautaService) Update(id uint64, pauta entity.Pauta) error {
 
-	// Implements this logic after
+	err := r.repo.Update(id, pauta)
+	if err != nil {
+		return err
+	}
 
 	return nil
 

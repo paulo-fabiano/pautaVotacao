@@ -44,15 +44,19 @@ func (c *Controller) CreatePauta(ctx *gin.Context) {
 
 func (c *Controller) ListPauta(ctx *gin.Context) {
 
-	idString := ctx.Query("id")
+	idString := ctx.Param("id")
 	ID, err := strconv.ParseUint(idString, 10, 64)
+	log.Println(idString, ID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
+		log.Println(err)
+		return
 	}
 
 	pauta, err := c.Controller.List(ID)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
+		log.Println(err)
 		return
 	}
 
@@ -79,25 +83,43 @@ func (c *Controller) ListAllPautas(ctx *gin.Context) {
 
 func (c *Controller) UpdatePauta(ctx *gin.Context) {
 
-	// if request.Method != "PUT" || request.Method != "PATCH" {
-	// 	handler.SendError(writer, http.StatusBadRequest, "método não permitido")
-	// 	return
-	// }
+	idString := ctx.Param("id")
+	if idString == "" {
+		handler.SendError(ctx, http.StatusBadRequest, "o ID está vazio")
+		return
+	}
 
-	// // implementar depois
+	ID, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		handler.SendError(ctx, http.StatusInternalServerError, "erro interno da aplicação")
+	}
+
+	var pauta entity.Pauta
+	err = ctx.ShouldBindJSON(&pauta)
+	if err != nil {
+		handler.SendError(ctx, http.StatusBadRequest, "erro no corpo da requisição")
+		return
+	}
+
+	err = c.Controller.Update(ID, pauta)
+	if err != nil {
+		handler.SendError(ctx, http.StatusInternalServerError, "erro interno do servidor")
+		return
+	}
+
+	handler.SendSucess(ctx, 204, nil)
 	
 }
 
 func (c *Controller) DeletePauta(ctx *gin.Context) {
 
 	idString := ctx.Param("id")
-	log.Println(idString)
 	if idString == "" {
 		handler.SendError(ctx, http.StatusBadGateway, "Erro ID é null")
 		return
 	}
 
-	ID, err := strconv.Atoi(idString)
+	ID, err := strconv.ParseUint(idString, 10, 64)
 	if err != nil {
 		handler.SendError(ctx, http.StatusInternalServerError, "Erro interno do servidor")
 		return
