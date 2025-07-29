@@ -2,9 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
-	
 
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/entity"
 	"github.com/paulo-fabiano/pautaVotacao/internal/config/database"
@@ -18,7 +18,8 @@ func NewPautaRepository() *Repository {
 	return &Repository{db: database.GetConnectionDatabase()}
 }
 
-func(r Repository) Create(pauta entity.Pauta) (int, error) {
+// Create é a função do Repository que cria uma pauta
+func(r Repository) Create(pauta entity.Pauta) (uint64, error) {
 
 	query := "INSERT INTO t_pauta_votacao (nome, descricao) VALUES ($1, $2) RETURNING id;"
 
@@ -33,14 +34,15 @@ func(r Repository) Create(pauta entity.Pauta) (int, error) {
 	err = stmt.QueryRow(&pauta.Nome, &pauta.Descricao).Scan(&ID)
 	if err != nil {
 		log.Println(err)
-		return 0, fmt.Errorf("Erro ao salvar objeto no banco de dados")
+		return 0, errors.New("erro ao salvar objeto no banco de dados")
 	}
 	
-	return ID, nil
+	return uint64(ID), nil
  
 }
 
-func(r Repository) Get(id int) (entity.Pauta, error) {
+// Get é a função do Repository que busca uma pauta
+func(r Repository) Get(id uint64) (entity.Pauta, error) {
 	
 	query := "SELECT * FROM t_pauta_votacao WHERE id = $1;"
 
@@ -62,6 +64,7 @@ func(r Repository) Get(id int) (entity.Pauta, error) {
 
 }
 
+// GetAll é a função do Repository busca todas as pautas
 func(r Repository) GetAll() ([]entity.Pauta, error) {
 	
 	query := "SELECT * FROM t_pauta_votacao;"
@@ -97,9 +100,10 @@ func(r Repository) GetAll() ([]entity.Pauta, error) {
 
 }
 
-func(r Repository) Update(id int, data interface{}) error {
+// Update é a função do Repository que atualiza uma Pauta
+func(r Repository) Update(id uint64, data interface{}) error {
 
-	queryExist := fmt.Sprintf("SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)")
+	queryExist := "SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)"
 
 	stmtExist, err := r.db.Prepare(queryExist)
 	if err != nil {
@@ -126,7 +130,7 @@ func(r Repository) Update(id int, data interface{}) error {
 		return err
 	}
 
-	queryUpdate := fmt.Sprintf("UPDATE t_pauta SET nome = $1, descricao = $2 WHERE id = $3;")
+	queryUpdate := "UPDATE t_pauta SET nome = $1, descricao = $2 WHERE id = $3;"
 	_, err = r.db.Exec(queryUpdate, pauta.Nome, pauta.Descricao, id)
 	if err != nil {
 		log.Println(err)
@@ -137,9 +141,10 @@ func(r Repository) Update(id int, data interface{}) error {
 	
 }
 
-func(r Repository) Delete(id int) error {
+// Delete é a função do Repository que apaga uma Pauta
+func(r Repository) Delete(id uint64) error {
 	
-	queryExist := fmt.Sprintf("SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)")
+	queryExist := "SELECT EXISTS(SELECT id FROM tasks WHERE id = $1)"
 
 	stmt, err := r.db.Prepare(queryExist)
 	if err != nil {
@@ -159,7 +164,7 @@ func(r Repository) Delete(id int) error {
 		return fmt.Errorf("ID não existe no banco de dados")
 	}
 
-	queryDelete := fmt.Sprintf("DELETE FROM t_pautas WHERE id = $1;")
+	queryDelete := "DELETE FROM t_pautas WHERE id = $1;"
 
 	stmt, err = r.db.Prepare(queryDelete)
 	if err != nil {

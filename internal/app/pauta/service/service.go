@@ -24,11 +24,11 @@ func NewPautaService(r *repository.Repository) *PautaService {
 func validadePauta(pauta entity.Pauta) error {
 
 	if pauta.Nome == "" {
-		return fmt.Errorf("O campo Nome está vazio")
+		return fmt.Errorf("o campo Nome está vazio")
 	}
 
 	if pauta.Descricao == "" {
-		return fmt.Errorf("O campo Descricao está vazio")
+		return fmt.Errorf("o campo Descricao está vazio")
 	}
 
 	return nil
@@ -44,6 +44,7 @@ func transformaEmEntity(dto dto.PautaRequest) entity.Pauta {
 
 }
 
+// Create é a função do Service para criar uma Pauta
 func (r *PautaService) Create(dto dto.PautaRequest) (entity.Pauta, error) {
 
 	pauta := transformaEmEntity(dto)
@@ -65,11 +66,8 @@ func (r *PautaService) Create(dto dto.PautaRequest) (entity.Pauta, error) {
 
 }
 
-func (r *PautaService) List(id int) (entity.Pauta, error) {
-
-	// if id ==  {
-	// 	return entity.Pauta{}, fmt.Errorf("ID é null")
-	// }
+// List é a função do Service para listar uma Pauta
+func (r *PautaService) List(id uint64) (entity.Pauta, error) {
 
 	var pauta entity.Pauta
 	pauta, err := r.repo.Get(id)
@@ -81,6 +79,7 @@ func (r *PautaService) List(id int) (entity.Pauta, error) {
 
 }
 
+// ListAll é a função do Service para listar pautas
 func (r *PautaService) ListAll() ([]entity.Pauta, error) {
 
 	listaPautas, err := r.repo.GetAll()
@@ -93,7 +92,8 @@ func (r *PautaService) ListAll() ([]entity.Pauta, error) {
 
 }
 
-func (r *PautaService) Update(id int, pauta entity.Pauta) error {
+// Update é a função do Service para atualizar uma Pauta
+func (r *PautaService) Update(id uint64, pauta entity.Pauta) error {
 
 	// Implements this logic after
 
@@ -101,7 +101,8 @@ func (r *PautaService) Update(id int, pauta entity.Pauta) error {
 
 }
 
-func (r *PautaService) Delete(id int) error {
+// Delete é a função do Service para apagar uma Pauta
+func (r *PautaService) Delete(id uint64) error {
 
 	err := r.repo.Delete(id)
 	if err != nil {

@@ -14,6 +14,7 @@ var (
 
 )
 
+// InitializeServer é a função que inicializa o Server da API
 func InitializeServer() error {
 
 	var (

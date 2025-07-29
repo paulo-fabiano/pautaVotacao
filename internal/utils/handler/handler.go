@@ -7,6 +7,7 @@ import (
 
 )
 
+// ErrorResponse é a struct para mensagens de erro da API
 type ErrorResponse struct {
 
 	Message string `json:"message"`
@@ -14,6 +15,7 @@ type ErrorResponse struct {
 
 }
 
+// SendError é a função que retorna erros da API
 func SendError(ctx *gin.Context, code int, errorMessage string) {
 
 	ctx.Header("Content-Type", "application/json")
@@ -24,6 +26,7 @@ func SendError(ctx *gin.Context, code int, errorMessage string) {
 
 }
 
+// SendSucess é a função que retorna mensagens de sucesso da API
 func SendSucess(ctx *gin.Context, code int, data interface{}) {
 
 	ctx.Header("Content-Type", "application/json")

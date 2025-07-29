@@ -8,6 +8,7 @@ import (
 
 )
 
+// InitializeRoutesApp recebe um *gin.Engine e inicializa as rotas da API
 func InitializeRoutesApp(ginRouter *gin.Engine) error {
 
 	if ginRouter == nil {

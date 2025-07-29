@@ -2,22 +2,27 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
-	 _ "github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 var (
+	// DBConnection é a conexão com o banco de dados
 	DBConnection *sql.DB
 )
 
+// ConnectDatabase é a função que faz a conexão com o banco de dados
 func ConnectDatabase() error {
 
 	err := godotenv.Load()
 	if err != nil {
-		return fmt.Errorf("Erro ao buscar variáveis de ambiente: ", err.Error())
+		log.Println(err.Error())
+		return errors.New("erro ao buscar variáveis de ambiente")
 	}
 
 	var (
@@ -51,6 +56,7 @@ func ConnectDatabase() error {
 
 }
 
+// GetConnectionDatabase é a função que retorna a conexão com o banco de dados
 func GetConnectionDatabase() *sql.DB {
 
 	return DBConnection

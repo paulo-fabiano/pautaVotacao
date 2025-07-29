@@ -9,27 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/dto"
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/entity"
-	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/service"
 	"github.com/paulo-fabiano/pautaVotacao/internal/utils/handler"
 )
 
-type Controller struct {
-	Controller *service.PautaService
-}
-
-func NewPautaController(service *service.PautaService) *Controller {
-	return &Controller{
-		Controller: service,
-	}
-}
-
+// CreatePauta é a função que cria uma nova Pauta no banco de dados
 func (c *Controller) CreatePauta(ctx *gin.Context) {
 	
 	var data dto.PautaRequest
 	err := ctx.ShouldBindJSON(&data)
 	if err != nil {
 		log.Println(err)
-		handler.SendError(ctx, http.StatusInternalServerError, "Erro interno do servidor")
+		handler.SendError(ctx, http.StatusInternalServerError, "erro interno do servidor")
 		return
 	}
 
@@ -55,7 +45,7 @@ func (c *Controller) CreatePauta(ctx *gin.Context) {
 func (c *Controller) ListPauta(ctx *gin.Context) {
 
 	idString := ctx.Query("id")
-	ID, err := strconv.Atoi(idString)
+	ID, err := strconv.ParseUint(idString, 10, 64)
 	if err != nil {
 		handler.SendError(ctx, http.StatusBadGateway, "Erro interno do servidor")
 	}

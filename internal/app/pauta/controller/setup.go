@@ -6,12 +6,24 @@ import (
 	"github.com/paulo-fabiano/pautaVotacao/internal/app/pauta/service"
 )
 
+type Controller struct {
+	Controller *service.PautaService
+}
+
+func NewPautaController(service *service.PautaService) *Controller {
+	return &Controller{
+		Controller: service,
+	}
+}
+
+// InitializeRoutesPauta é a função que inicializa as rotas relacionadas ao "objeto" Pauta da API
 func InitializeRoutesPauta(gin *gin.Engine) {
 
 	repo := repository.NewPautaRepository()
 	service := service.NewPautaService(repo)
 	controller := NewPautaController(service)
 
+	// basePath do grupo de rotas relacionadas a Pauta
 	basePath := "/api"
 	v1 := gin.Group(basePath)
 	{
